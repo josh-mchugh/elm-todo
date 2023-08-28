@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Html exposing (..)
+import Html.Attributes exposing (..)
 
 
 main : Program (Model) Model Msg
@@ -36,4 +37,25 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div [] [ text "Hello World" ]
+    div
+        [ class "todomvc-wrapper" ]
+        [ section
+              [ class "todoapp" ]
+              [ viewInput "" ]
+        ]
+
+
+viewInput : String -> Html Msg
+viewInput task =
+    header
+        [ class "header" ]
+        [ h1 [] [ text "todos" ]
+        , input
+            [ class "new-todo"
+            , placeholder "What needs to be done?"
+            , autofocus True
+            , value task
+            , name "newTodo"
+            ]
+            []
+        ]
