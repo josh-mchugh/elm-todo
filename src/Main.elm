@@ -4,6 +4,7 @@ import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Html.Keyed as Keyed
 import Json.Decode as Json
 
 
@@ -92,7 +93,9 @@ view model =
         [ class "todomvc-wrapper" ]
         [ section
             [ class "todoapp" ]
-            [ viewInput model.field ]
+            [ viewInput model.field
+            , viewEntries model.entries
+            ]
         , viewFooter
         ]
 
@@ -126,6 +129,28 @@ onEnter msg =
                 Json.fail "not ENTER"
     in
     on "keydown" (Json.andThen isEnter keyCode)
+
+
+viewEntries : List Entry -> Html Msg
+viewEntries entries =
+    section [ class "main" ]
+        [ Keyed.ul [ class "todo-list" ] <|
+            List.map viewKeyedEntry entries
+        ]
+
+
+viewKeyedEntry : Entry -> ( String, Html Msg )
+viewKeyedEntry todo =
+    ( String.fromInt todo.id, viewEntry todo )
+
+
+viewEntry : Entry -> Html Msg
+viewEntry todo =
+    li []
+        [ div
+            [ class "view" ]
+            [ label [] [ text todo.description ] ]
+        ]
 
 
 viewFooter : Html msg
