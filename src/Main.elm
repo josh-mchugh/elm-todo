@@ -35,7 +35,7 @@ type Msg
     | UpdateField String
 
 
-update : Msg -> Model -> (Model, Cmd Msg)
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NoOp ->
@@ -52,8 +52,9 @@ view model =
     div
         [ class "todomvc-wrapper" ]
         [ section
-              [ class "todoapp" ]
-              [ viewInput model.field ]
+            [ class "todoapp" ]
+            [ viewInput model.field ]
+        , viewFooter
         ]
 
 
@@ -71,4 +72,23 @@ viewInput task =
             , onInput UpdateField
             ]
             []
+        ]
+
+
+viewFooter : Html msg
+viewFooter =
+    footer [ class "info" ]
+        [ p [] [ text "Double-click to edit a todo" ]
+        , p []
+            [ text "Written by "
+            , a [ href "https://github.com/josh-mchugh" ] [ text "Josh McHugh" ]
+            ]
+        , p []
+            [ text "Original written by "
+            , a [ href "https://github.com/evancz" ] [ text "Evan Czaplicki" ]
+            ]
+        , p []
+            [ text "Part of "
+            , a [ href "https://todomvc.com" ] [ text "TodoMVC" ]
+            ]
         ]
