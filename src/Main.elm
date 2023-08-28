@@ -4,6 +4,7 @@ import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Json.Decode as Json
 
 
 main : Program () Model Msg
@@ -17,12 +18,35 @@ main =
 
 
 type alias Model =
-    { field : String }
+    { field : String
+    , uid : Int
+    , entries : List Entry
+    }
+
+
+type alias Entry =
+    { description : String
+    , completed : Bool
+    , editing : Bool
+    , id : Int
+    }
 
 
 emptyModel : Model
 emptyModel =
-    { field = "" }
+    { field = ""
+    , uid = 0
+    , entries = []
+    }
+
+
+newEntry : String -> Int -> Entry
+newEntry desc id =
+    { description = desc
+    , completed = False
+    , editing = False
+    , id = id
+    }
 
 
 init : () -> ( Model, Cmd Msg )
@@ -33,6 +57,7 @@ init () =
 type Msg
     = NoOp
     | UpdateField String
+    | Add
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -43,6 +68,20 @@ update msg model =
 
         UpdateField str ->
             ( { model | field = str }
+            , Cmd.none
+            )
+
+        Add ->
+            ( { model
+                | uid = model.uid + 1
+                , field = ""
+                , entries =
+                    if String.isEmpty model.field then
+                        model.entries
+
+                    else
+                        model.entries ++ [ newEntry model.field model.uid ]
+              }
             , Cmd.none
             )
 
@@ -70,9 +109,23 @@ viewInput task =
             , value task
             , name "newTodo"
             , onInput UpdateField
+            , onEnter Add
             ]
             []
         ]
+
+
+onEnter : Msg -> Attribute Msg
+onEnter msg =
+    let
+        isEnter code =
+            if code == 13 then
+                Json.succeed msg
+
+            else
+                Json.fail "not ENTER"
+    in
+    on "keydown" (Json.andThen isEnter keyCode)
 
 
 viewFooter : Html msg
