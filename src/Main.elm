@@ -59,6 +59,7 @@ type Msg
     = NoOp
     | UpdateField String
     | Add
+    | Delete Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -83,6 +84,11 @@ update msg model =
                     else
                         model.entries ++ [ newEntry model.field model.uid ]
               }
+            , Cmd.none
+            )
+
+        Delete id ->
+            ( { model | entries = List.filter (\t -> t.id /= id) model.entries }
             , Cmd.none
             )
 
@@ -149,7 +155,13 @@ viewEntry todo =
     li []
         [ div
             [ class "view" ]
-            [ label [] [ text todo.description ] ]
+            [ label [] [ text todo.description ]
+            , button
+                [ class "destroy"
+                , onClick (Delete todo.id)
+                ]
+                []
+            ]
         ]
 
 
