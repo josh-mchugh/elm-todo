@@ -3,9 +3,10 @@ module Main exposing (main)
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 
 
-main : Program (Model) Model Msg
+main : Program () Model Msg
 main =
     Browser.element
         { init = init
@@ -16,16 +17,22 @@ main =
 
 
 type alias Model =
-    { }
+    { field : String }
 
 
-init : Model -> ( Model, Cmd Msg )
-init model =
-    ( model, Cmd.none )
+emptyModel : Model
+emptyModel =
+    { field = "" }
+
+
+init : () -> ( Model, Cmd Msg )
+init () =
+    ( emptyModel, Cmd.none )
 
 
 type Msg
     = NoOp
+    | UpdateField String
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -34,6 +41,11 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
+        UpdateField str ->
+            ( { model | field = str }
+            , Cmd.none
+            )
+
 
 view : Model -> Html Msg
 view model =
@@ -41,7 +53,7 @@ view model =
         [ class "todomvc-wrapper" ]
         [ section
               [ class "todoapp" ]
-              [ viewInput "" ]
+              [ viewInput model.field ]
         ]
 
 
@@ -56,6 +68,7 @@ viewInput task =
             , autofocus True
             , value task
             , name "newTodo"
+            , onInput UpdateField
             ]
             []
         ]
