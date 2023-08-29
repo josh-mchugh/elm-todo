@@ -63,6 +63,7 @@ type Msg
     | Delete Int
     | EditingEntry Int Bool
     | UpdateEntry Int String
+    | Check Int Bool
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -121,6 +122,19 @@ update msg model =
                 ( { model | entries = List.map updateEntry model.entries }
                 , Cmd.none
                 )
+
+        Check id isCompleted ->
+            let
+                updateEntry t =
+                    if t.id == id then
+                        { t | completed = isCompleted }
+                    else
+                        t
+            in
+            ( { model | entries = List.map updateEntry model.entries }
+            , Cmd.none
+            )
+
 view : Model -> Html Msg
 view model =
     div
@@ -181,10 +195,17 @@ viewKeyedEntry todo =
 viewEntry : Entry -> Html Msg
 viewEntry todo =
     li
-        [ classList [ ("editing", todo.editing) ] ]
+        [ classList [ ( "completed", todo.completed), ("editing", todo.editing) ] ]
         [ div
             [ class "view" ]
-            [ label [ onDoubleClick (EditingEntry todo.id True) ]
+            [ input
+                [ class "toggle"
+                , type_ "checkbox"
+                , checked todo.completed
+                , onClick (Check todo.id (not todo.completed))
+                ]
+                []
+            , label [ onDoubleClick (EditingEntry todo.id True) ]
                   [ text todo.description ]
             , button
                 [ class "destroy"
