@@ -1,5 +1,8 @@
 port module Main exposing (main)
 
+{-| TodoMVC implemented in Elm
+-}
+
 import Browser
 import Browser.Dom as Dom
 import Html exposing (..)
@@ -10,6 +13,12 @@ import Json.Decode as Json
 import Task
 
 
+
+-- MAIN
+
+
+{-| Elm application entry function
+-}
 main : Program (Maybe Model) Model Msg
 main =
     Browser.element
@@ -20,9 +29,19 @@ main =
         }
 
 
+
+-- PORT
+
+
+{-| port to set storage to localState within the browser. Passes the model.
+-}
 port setStorage : Model -> Cmd msg
 
 
+{-| Update browser local storage with every update. This function adds
+a function call to the `setStorage` port with every call to the update
+function.
+-}
 updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
 updateWithStorage msg model =
     let
@@ -32,6 +51,10 @@ updateWithStorage msg model =
     ( newModel
     , Cmd.batch [ setStorage newModel, cmds ]
     )
+
+
+
+-- MODEL
 
 
 type alias Model =
@@ -68,11 +91,17 @@ newEntry desc id =
     }
 
 
+{-| Initial application model function
+-}
 init : Maybe Model -> ( Model, Cmd Msg )
 init maybeModel =
     ( Maybe.withDefault emptyModel maybeModel
     , Cmd.none
     )
+
+
+
+-- UPDATE
 
 
 type Msg
@@ -88,6 +117,8 @@ type Msg
     | ChangeVisibility String
 
 
+{-| Application update function
+-}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -180,6 +211,12 @@ update msg model =
             )
 
 
+
+-- VIEW
+
+
+{-| Main wrapper which contains the entire ToDo application
+-}
 view : Model -> Html Msg
 view model =
     div
@@ -194,6 +231,8 @@ view model =
         ]
 
 
+{-| Application header with todo header and task input
+-}
 viewInput : String -> Html Msg
 viewInput task =
     header
@@ -212,6 +251,9 @@ viewInput task =
         ]
 
 
+{-| function to handle the "on" input event for "keydown" when the
+"enter" key is pressed.
+-}
 onEnter : Msg -> Attribute Msg
 onEnter msg =
     let
@@ -225,6 +267,9 @@ onEnter msg =
     on "keydown" (Json.andThen isEnter keyCode)
 
 
+{-| Section wrapper for the main part of the app with the list
+of tasks.
+-}
 viewEntries : String -> List Entry -> Html Msg
 viewEntries visibility entries =
     let
@@ -259,11 +304,16 @@ viewEntries visibility entries =
         ]
 
 
+{-| Keyed entry view function, this function returns the entry view
+in a tuple with the task id
+-}
 viewKeyedEntry : Entry -> ( String, Html Msg )
 viewKeyedEntry todo =
     ( String.fromInt todo.id, viewEntry todo )
 
 
+{-| Task Entry view for the task items
+-}
 viewEntry : Entry -> Html Msg
 viewEntry todo =
     li
@@ -298,6 +348,8 @@ viewEntry todo =
         ]
 
 
+{-| Wrapper view for the application controls
+-}
 viewControls : String -> List Entry -> Html Msg
 viewControls visibility entries =
     let
@@ -317,6 +369,8 @@ viewControls visibility entries =
         ]
 
 
+{-| View for tasks count for controls view
+-}
 viewControlsCount : Int -> Html Msg
 viewControlsCount entriesLeft =
     let
@@ -334,6 +388,8 @@ viewControlsCount entriesLeft =
         ]
 
 
+{-| View for clear completed tasks button for controls view
+-}
 viewControlsClear : Int -> Html Msg
 viewControlsClear entriesCompleted =
     button
@@ -344,6 +400,8 @@ viewControlsClear entriesCompleted =
         [ text ("Clear completed (" ++ String.fromInt entriesCompleted ++ ")") ]
 
 
+{-| View for the filter tasks action items for the controls view
+-}
 viewControlsFilter : String -> Html Msg
 viewControlsFilter visibility =
     ul
@@ -356,6 +414,8 @@ viewControlsFilter visibility =
         ]
 
 
+{-| View for filter items within the filter tasks view
+-}
 visibilitySwap : String -> String -> String -> Html Msg
 visibilitySwap uri visibility actualVisibility =
     li
@@ -365,6 +425,8 @@ visibilitySwap uri visibility actualVisibility =
         ]
 
 
+{-| Application footer with author infomation and project references
+-}
 viewFooter : Html msg
 viewFooter =
     footer [ class "info" ]
