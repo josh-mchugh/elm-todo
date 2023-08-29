@@ -65,6 +65,7 @@ type Msg
     | UpdateEntry Int String
     | Check Int Bool
     | DeleteComplete
+    | CheckAll Bool
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -141,6 +142,15 @@ update msg model =
             , Cmd.none
             )
 
+        CheckAll isCompleted ->
+            let
+                updateEntry t =
+                    { t | completed = isCompleted }
+            in
+            ( { model | entries = List.map updateEntry model.entries }
+            , Cmd.none
+            )
+
 view : Model -> Html Msg
 view model =
     div
@@ -188,8 +198,20 @@ onEnter msg =
 
 viewEntries : List Entry -> Html Msg
 viewEntries entries =
+    let
+        allCompleted =
+            List.all .completed entries
+    in
     section [ class "main" ]
-        [ Keyed.ul [ class "todo-list" ] <|
+        [ input
+              [ class "toggle-all"
+              , type_ "checkbox"
+              , name "toggle"
+              , checked allCompleted
+              , onClick (CheckAll (not allCompleted))
+              ]
+              []
+        , Keyed.ul [ class "todo-list" ] <|
             List.map viewKeyedEntry entries
         ]
 
