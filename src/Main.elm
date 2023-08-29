@@ -1,4 +1,4 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 import Browser
 import Browser.Dom as Dom
@@ -9,14 +9,29 @@ import Html.Keyed as Keyed
 import Json.Decode as Json
 import Task
 
-main : Program () Model Msg
+
+main : Program (Maybe Model) Model Msg
 main =
     Browser.element
         { init = init
         , view = view
-        , update = update
+        , update = updateWithStorage
         , subscriptions = \_ -> Sub.none
         }
+
+
+port setStorage : Model -> Cmd msg
+
+
+updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
+updateWithStorage msg model =
+    let
+        ( newModel, cmds ) =
+            update msg model
+    in
+    ( newModel
+    , Cmd.batch [ setStorage newModel, cmds ]
+    )
 
 
 type alias Model =
@@ -53,9 +68,11 @@ newEntry desc id =
     }
 
 
-init : () -> ( Model, Cmd Msg )
-init () =
-    ( emptyModel, Cmd.none )
+init : Maybe Model -> ( Model, Cmd Msg )
+init maybeModel =
+    ( Maybe.withDefault emptyModel maybeModel
+    , Cmd.none
+    )
 
 
 type Msg
@@ -106,6 +123,7 @@ update msg model =
                 updateEntry t =
                     if t.id == id then
                         { t | editing = isEditing }
+
                     else
                         t
 
@@ -113,26 +131,28 @@ update msg model =
                     Dom.focus ("todo-" ++ String.fromInt id)
             in
             ( { model | entries = List.map updateEntry model.entries }
-            , Task.attempt(\_ -> NoOp) focus
+            , Task.attempt (\_ -> NoOp) focus
             )
 
         UpdateEntry id task ->
             let
                 updateEntry t =
                     if t.id == id then
-                        { t | description = task}
+                        { t | description = task }
+
                     else
                         t
             in
-                ( { model | entries = List.map updateEntry model.entries }
-                , Cmd.none
-                )
+            ( { model | entries = List.map updateEntry model.entries }
+            , Cmd.none
+            )
 
         Check id isCompleted ->
             let
                 updateEntry t =
                     if t.id == id then
                         { t | completed = isCompleted }
+
                     else
                         t
             in
@@ -141,7 +161,7 @@ update msg model =
             )
 
         DeleteComplete ->
-            ( { model | entries = List.filter ( not << .completed ) model.entries }
+            ( { model | entries = List.filter (not << .completed) model.entries }
             , Cmd.none
             )
 
@@ -214,7 +234,7 @@ viewEntries visibility entries =
                     todo.completed
 
                 "Active" ->
-                     not todo.completed
+                    not todo.completed
 
                 _ ->
                     True
@@ -224,13 +244,13 @@ viewEntries visibility entries =
     in
     section [ class "main" ]
         [ input
-              [ class "toggle-all"
-              , type_ "checkbox"
-              , name "toggle"
-              , checked allCompleted
-              , onClick (CheckAll (not allCompleted))
-              ]
-              []
+            [ class "toggle-all"
+            , type_ "checkbox"
+            , name "toggle"
+            , checked allCompleted
+            , onClick (CheckAll (not allCompleted))
+            ]
+            []
         , label
             [ for "toggle-all" ]
             [ text "Mark all as complete" ]
@@ -247,7 +267,7 @@ viewKeyedEntry todo =
 viewEntry : Entry -> Html Msg
 viewEntry todo =
     li
-        [ classList [ ( "completed", todo.completed), ("editing", todo.editing) ] ]
+        [ classList [ ( "completed", todo.completed ), ( "editing", todo.editing ) ] ]
         [ div
             [ class "view" ]
             [ input
@@ -258,7 +278,7 @@ viewEntry todo =
                 ]
                 []
             , label [ onDoubleClick (EditingEntry todo.id True) ]
-                  [ text todo.description ]
+                [ text todo.description ]
             , button
                 [ class "destroy"
                 , onClick (Delete todo.id)
@@ -287,14 +307,14 @@ viewControls visibility entries =
         entriesLeft =
             List.length entries - entriesCompleted
     in
-        footer
-            [ class "footer"
-            , hidden (List.isEmpty entries)
-            ]
-            [ viewControlsCount entriesLeft
-            , viewControlsFilter visibility
-            , viewControlsClear entriesCompleted
-            ]
+    footer
+        [ class "footer"
+        , hidden (List.isEmpty entries)
+        ]
+        [ viewControlsCount entriesLeft
+        , viewControlsFilter visibility
+        , viewControlsClear entriesCompleted
+        ]
 
 
 viewControlsCount : Int -> Html Msg
@@ -303,14 +323,15 @@ viewControlsCount entriesLeft =
         item_ =
             if entriesLeft == 1 then
                 " item"
+
             else
                 " items"
     in
-        span
-            [ class "todo-count" ]
-            [ strong [] [ text (String.fromInt entriesLeft) ]
-            , text (item_ ++ " left")
-            ]
+    span
+        [ class "todo-count" ]
+        [ strong [] [ text (String.fromInt entriesLeft) ]
+        , text (item_ ++ " left")
+        ]
 
 
 viewControlsClear : Int -> Html Msg
