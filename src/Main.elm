@@ -64,6 +64,7 @@ type Msg
     | EditingEntry Int Bool
     | UpdateEntry Int String
     | Check Int Bool
+    | DeleteComplete
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -135,6 +136,11 @@ update msg model =
             , Cmd.none
             )
 
+        DeleteComplete ->
+            ( { model | entries = List.filter ( not << .completed ) model.entries }
+            , Cmd.none
+            )
+
 view : Model -> Html Msg
 view model =
     div
@@ -143,6 +149,7 @@ view model =
             [ class "todoapp" ]
             [ viewInput model.field
             , viewEntries model.entries
+            , viewControls model.entries
             ]
         , viewFooter
         ]
@@ -224,6 +231,50 @@ viewEntry todo =
             ]
             []
         ]
+
+
+viewControls : List Entry -> Html Msg
+viewControls entries =
+    let
+        entriesCompleted =
+            List.length (List.filter .completed entries)
+
+        entriesLeft =
+            List.length entries - entriesCompleted
+    in
+        footer
+            [ class "footer"
+            , hidden (List.isEmpty entries)
+            ]
+            [ viewControlsCount entriesLeft
+            , viewControlsClear entriesCompleted
+            ]
+
+
+viewControlsCount : Int -> Html Msg
+viewControlsCount entriesLeft =
+    let
+        item_ =
+            if entriesLeft == 1 then
+                " item"
+            else
+                " items"
+    in
+        span
+            [ class "todo-count" ]
+            [ strong [] [ text (String.fromInt entriesLeft ) ]
+            , text (item_ ++ " left")
+            ]
+
+
+viewControlsClear : Int -> Html Msg
+viewControlsClear entriesCompleted =
+    button
+        [ class "clear-completed"
+        , hidden (entriesCompleted == 0)
+        , onClick DeleteComplete
+        ]
+        [ text ("Clear completed (" ++ String.fromInt entriesCompleted ++ ")") ]
 
 
 viewFooter : Html msg
