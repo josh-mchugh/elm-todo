@@ -1,12 +1,13 @@
 module Main exposing (main)
 
 import Browser
+import Browser.Dom as Dom
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Html.Keyed as Keyed
 import Json.Decode as Json
-
+import Task
 
 main : Program () Model Msg
 main =
@@ -60,6 +61,8 @@ type Msg
     | UpdateField String
     | Add
     | Delete Int
+    | EditingEntry Int Bool
+    | UpdateEntry Int String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -92,7 +95,32 @@ update msg model =
             , Cmd.none
             )
 
+        EditingEntry id isEditing ->
+            let
+                updateEntry t =
+                    if t.id == id then
+                        { t | editing = isEditing }
+                    else
+                        t
 
+                focus =
+                    Dom.focus ("todo-" ++ String.fromInt id)
+            in
+            ( { model | entries = List.map updateEntry model.entries }
+            , Task.attempt(\_ -> NoOp) focus
+            )
+
+        UpdateEntry id task ->
+            let
+                updateEntry t =
+                    if t.id == id then
+                        { t | description = task}
+                    else
+                        t
+            in
+                ( { model | entries = List.map updateEntry model.entries }
+                , Cmd.none
+                )
 view : Model -> Html Msg
 view model =
     div
@@ -152,16 +180,28 @@ viewKeyedEntry todo =
 
 viewEntry : Entry -> Html Msg
 viewEntry todo =
-    li []
+    li
+        [ classList [ ("editing", todo.editing) ] ]
         [ div
             [ class "view" ]
-            [ label [] [ text todo.description ]
+            [ label [ onDoubleClick (EditingEntry todo.id True) ]
+                  [ text todo.description ]
             , button
                 [ class "destroy"
                 , onClick (Delete todo.id)
                 ]
                 []
             ]
+        , input
+            [ class "edit"
+            , value todo.description
+            , name "title"
+            , id ("todo-" ++ String.fromInt todo.id)
+            , onInput (UpdateEntry todo.id)
+            , onBlur (EditingEntry todo.id False)
+            , onEnter (EditingEntry todo.id False)
+            ]
+            []
         ]
 
 
